@@ -55,7 +55,7 @@ aws cloudformation create-stack --stack-name ${NAMESPACE}-cognito-userpool --tem
 ### 01. Services
 Create all the backend services here. Right now in this scope I have created two basic lambda services called `happy-world` and `hello-world` that returns "Happy World!!" and "Hello World!!" when plugged behind APIGateway.
 
-- Deploy **happy-world lambda**
+##### Deploy happy-world lambda
 ```shell
 make -C components/01-services/happy-world deploy
 ```
@@ -68,7 +68,7 @@ sam deploy --template-file packaged.yaml --stack-name ${NAMESPACE}-happy-world-l
 ```
 
 
-- Deploy **hello-world lambda**
+##### Deploy hello-world lambda
 ```shell
 make -C components/01-services/hello-world deploy
 ```
@@ -95,3 +95,6 @@ aws cloudformation deploy --stack-name ${NAMESPACE}-api-gateway-ecr --template-f
 ### 02. Verify
 - Generate the `AcessToken` by using the Cognito URLs
 - curl -H "Authorization: Bearer <token>" <endpoint> OR POSTMAN
+
+
+### Full Demo Gif
