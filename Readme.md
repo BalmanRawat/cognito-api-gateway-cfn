@@ -98,3 +98,5 @@ aws cloudformation deploy --stack-name ${NAMESPACE}-api-gateway-ecr --template-f
 
 
 ### Full Demo Gif
+
+![apigateway](images/api-gateway-video.gif "demo video")
