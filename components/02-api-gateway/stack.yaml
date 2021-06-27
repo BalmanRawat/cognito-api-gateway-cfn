@@ -40,112 +40,11 @@ Resources:
         - Key: "EnvironmentType"
           Value: !Ref EnvironmentType
 
-  #### CUSTOM DOMAIN SETTINGS ####
-  # OutputsAPIDomain:
-  #   Type: AWS::ApiGateway::DomainName
-  #   Properties:
-  #     DomainName:
-  #       Fn::ImportValue: !Sub ${Namespace}:${SubSystem}:OutputsAPIHostedZoneName
-  #     RegionalCertificateArn: !ImportValue WildcardCertificateArn
-  #     EndpointConfiguration:
-  #       Types:
-  #         - REGIONAL
-  #     SecurityPolicy: TLS_1_2
-
-  # OutputsAPIMapping:
-  #   Type: AWS::ApiGateway::BasePathMapping
-  #   Properties:
-  #     DomainName: !Ref OutputsAPIDomain
-  #     RestApiId: !Ref APIGateway
-  #     Stage: !Ref LatestStage
-
-  # OutputsAPIGatewayRecordSet:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     Comment: 'A resource record to associate outputs api domain to api gateway.'
-  #     HostedZoneId:
-  #       Fn::ImportValue: !Sub "${Namespace}:${SubSystem}:OutputsAPIHostedZoneID"
-  #     Name:
-  #       Fn::ImportValue: !Sub "${Namespace}:${SubSystem}:OutputsAPIHostedZoneName"
-  #     Type: A
-  #     AliasTarget:
-  #       DNSName: !GetAtt OutputsAPIDomain.RegionalDomainName
-  #       EvaluateTargetHealth: false
-  #       HostedZoneId: !GetAtt OutputsAPIDomain.RegionalHostedZoneId
-
-  # IntegrationsAPIDomain:
-  #   Type: AWS::ApiGateway::DomainName
-  #   Properties:
-  #     DomainName:
-  #       Fn::ImportValue: !Sub ${Namespace}:${SubSystem}:IntegrationsAPIHostedZoneName
-  #     RegionalCertificateArn: !ImportValue WildcardCertificateArn
-  #     EndpointConfiguration:
-  #       Types:
-  #         - REGIONAL
-  #     SecurityPolicy: TLS_1_2
-
-  # IntegrationsAPIMapping:
-  #   Type: AWS::ApiGateway::BasePathMapping
-  #   Properties:
-  #     DomainName: !Ref IntegrationsAPIDomain
-  #     RestApiId: !Ref APIGateway
-  #     Stage: !Ref LatestStage
-
-  # IntegrationsAPIGatewayRecordSet:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     Comment: 'A resource record to associate outputs api domain to api gateway.'
-  #     HostedZoneId:
-  #       Fn::ImportValue: !Sub "${Namespace}:${SubSystem}:IntegrationsAPIHostedZoneID"
-  #     Name:
-  #       Fn::ImportValue: !Sub "${Namespace}:${SubSystem}:IntegrationsAPIHostedZoneName"
-  #     Type: A
-  #     AliasTarget:
-  #       DNSName: !GetAtt IntegrationsAPIDomain.RegionalDomainName
-  #       EvaluateTargetHealth: false
-  #       HostedZoneId: !GetAtt IntegrationsAPIDomain.RegionalHostedZoneId
-
-  #### USAGE PLAN ####
-  # UsagePlan:
-  #   Type: AWS::ApiGateway::UsagePlan
-  #   Properties:
-  #     ApiStages:
-  #       - ApiId: !Ref APIGateway
-  #         Stage: !Ref LatestStage
-  #     Description: Usage Plan for Public API
-  #     Throttle:
-  #       BurstLimit: !Ref ApiBurstLimit
-  #       RateLimit: !Ref ApiRateLimit
-  #     UsagePlanName: !Sub ${Namespace}-${SubSystem}-PublicAPI
-
-  # WorkStreamsLambdaAuthorizer:
-  #   Type: AWS::ApiGateway::Authorizer
-  #   Properties:
-  #     AuthorizerCredentials: !GetAtt WorkStreamsAuthorizerLambdaInvokeRole.Arn
-  #     AuthorizerResultTtlInSeconds: 1500 # Authorizer result is cached for 30 mins
-  #     AuthorizerUri: !Join
-  #       - ''
-  #       - - 'arn:aws:apigateway:'
-  #         - !Ref 'AWS::Region'
-  #         - ':lambda:path/2015-03-31/functions/'
-  #         - Fn::ImportValue: !Join [':', [!Ref Namespace, !Ref SubSystem, OutputAPIGatewayAuthorizerLambdaArn]]
-  #         - /invocations
-  #     IdentitySource: method.request.header.x-api-key
-  #     Name: workstreamlambdaAuthorizer
-  #     RestApiId: !Ref APIGateway
-  #     Type: REQUEST
-
-
   #### AUTHORIZER ####
   CognitoAuthorizer:
     Type: AWS::ApiGateway::Authorizer
     Properties:
-      # AuthorizerCredentials: String
-      # AuthorizerResultTtlInSeconds: Integer
-      # AuthorizerUri: String
-      # AuthType: String
       IdentitySource: method.request.header.Authorization
-      # IdentityValidationExpression: String
       Name: !Sub ${Namespace}-cognito-authoirzer
       ProviderARNs:
         - Fn::ImportValue: !Join [ ':', [ !Ref Namespace,'CognitoUserPoolArn']]
@@ -175,26 +74,6 @@ Resources:
       RestApiId: !Ref APIGateway
       ParentId: !GetAtt APIGateway.RootResourceId
       PathPart: !Ref ApiVersion
-
-  # #### GENERIC API RESPONSES ####
-  # ValidationErrorGatewayResponse:
-  #   Type: AWS::ApiGateway::GatewayResponse
-  #   Properties:
-  #     ResponseType: 'BAD_REQUEST_BODY'
-  #     RestApiId: !Ref APIGateway
-  #     StatusCode: '400'
-  #     ResponseTemplates:
-  #       application/json: '{"message": $context.error.messageString, "validationError": "$context.error.validationErrorString"}'
-
-  # # for consistent formatting of response field. if we do not specify this template the message field will be in proper case
-  # AccessDeniedGatewayResponse:
-  #   Type: AWS::ApiGateway::GatewayResponse
-  #   Properties:
-  #     ResponseType: 'ACCESS_DENIED'
-  #     RestApiId: !Ref APIGateway
-  #     StatusCode: '403'
-  #     ResponseTemplates:
-  #       application/json: '{"message": $context.error.messageString}'
 
   ### TALENT LMS CALLBACK API STACKS ####
   HelloWorldAPI:
