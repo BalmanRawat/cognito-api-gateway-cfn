@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: lambda to return happy world
+Globals:
+  Function:
+    Timeout: 3
+Parameters:
+  Namespace:
+    Description: Name of the environment
+    Type: String
+Resources:
+  HappyWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: app.lambda_handler
+      Runtime: python3.8
+Outputs:
+  HappyWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HappyWorldFunction.Arn
+    Export:
+      Name: !Sub ${Namespace}:HappyWorldFunctionArn
+  HappyWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HappyWorldFunctionRole.Arn

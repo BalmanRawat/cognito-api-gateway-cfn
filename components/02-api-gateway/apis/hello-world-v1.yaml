@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Task Output Public API for sending QC sampling data
+
+Parameters:
+  APIGatewayID:
+    Type: String
+  RootResourceId:
+    Type: String
+  AuthorizerId:
+    Type: String
+  Namespace:
+    Type: String
+    Description: Name given to an environment
+  ApiVersionResource:
+    Type: String
+Resources:
+  #### REST API RESOURCES ####
+  HelloResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref APIGatewayID
+      ParentId: !Ref ApiVersionResource
+      PathPart: hello
+
+  # Role used for API gateway to invoke lambda
+  LambdaInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ApiGatewayLogsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  Fn::ImportValue: !Join [':', [!Ref Namespace, 'HelloWorldFunctionArn']]
+
+  FlowCallbackPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizationScopes: 
+        - email
+      AuthorizerId: !Ref AuthorizerId
+      HttpMethod: GET
+      OperationName: helloworld
+      Integration:
+        Credentials: !GetAtt LambdaInvokeRole.Arn
+        IntegrationHttpMethod: POST
+        PassthroughBehavior: WHEN_NO_MATCH
+        TimeoutInMillis: 15000
+        Type: AWS_PROXY
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - ':lambda:path/2015-03-31/functions/'
+            - Fn::ImportValue: !Join [':', [!Ref Namespace,'HelloWorldFunctionArn']]
+            - /invocations
+      ResourceId: !Ref HelloResource
+      RestApiId: !Ref APIGatewayID

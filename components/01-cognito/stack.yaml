@@ -1,0 +1,89 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: creates cognito user pool
+
+Parameters:
+  EnvironmentType:
+    Description: Type of the environment for this stack
+    Type: String
+    Default: nonproduction
+    AllowedValues:
+      - nonproduction
+      - production
+  Namespace:
+    Description: Namespace of the resources
+    Type: String
+
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${Namespace}-cognito-userpool
+      # DeviceConfiguration:
+      #   ChallengeRequiredOnNewDevice: true
+      #   DeviceOnlyRememberedOnUserPrompt: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 1
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+      UserPoolTags:
+        Name: !Sub ${Namespace}-cognito-userpool
+        EnvironmentType: !Ref EnvironmentType
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${Namespace}-cognito-client
+      GenerateSecret: true
+      UserPoolId: !Ref CognitoUserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - phone
+        - email
+        - profile
+        - openid
+        - aws.cognito.signin.user.admin
+      CallbackURLs:
+        - http://localhost/callback
+      LogoutURLs:
+        - http://localhost/logout
+      SupportedIdentityProviders:
+        - COGNITO
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub ${Namespace}-auth
+      UserPoolId: !Ref CognitoUserPool
+
+
+Outputs:
+  UserPoolId:
+    Description: Cognito User Pool Id
+    Value: !Ref CognitoUserPool
+    Export: 
+      Name: !Sub ${Namespace}:CognitoUserPoolId
+  CognitoUserPoolArn:
+    Description: This carries the Cognito Userpool Arn
+    Value: !GetAtt CognitoUserPool.Arn
+    Export: 
+      Name: !Sub ${Namespace}:CognitoUserPoolArn
+  ClientId:
+    Description: Cognito User Pool Client Id
+    Value: !Ref UserPoolClient
+    Export: 
+      Name: !Sub ${Namespace}:CognitoUserPoolClientId
